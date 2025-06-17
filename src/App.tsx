@@ -6,6 +6,7 @@ import CouponDetail from './pages/CouponDetail'
 import RedemptionHistory from './pages/RedemptionHistory'
 import AdminCoupons from './pages/AdminCoupons'
 import AdminBrands from './pages/AdminBrands'
+import AdminDashboard from './pages/AdminDashboard'
 import EditCoupon from './pages/EditCoupon'
 import CouponRedemptions from './pages/CouponRedemptions'
 import PrivateRoute from './components/PrivateRoute'
@@ -43,6 +44,11 @@ function App() {
         <Route path="/admin/brands" element={
           <PrivateRoute>
             <AdminBrands />
+          </PrivateRoute>
+        } />
+        <Route path="/admin/dashboard" element={
+          <PrivateRoute>
+            <AdminDashboard />
           </PrivateRoute>
         } />
         <Route path="/admin/coupons/:id/edit" element={
