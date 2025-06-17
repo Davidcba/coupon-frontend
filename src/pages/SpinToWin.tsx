@@ -24,7 +24,7 @@ export default function SpinToWin() {
     try {
       const result = await api<Coupon>('/spin', token!)
       setCoupon(result)
-    } catch (err: any) {
+    } catch (err) {
       console.error(err)
       setError('Could not spin right now. Try again later.')
     } finally {
