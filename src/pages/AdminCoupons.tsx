@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useFirebaseUser } from '../hooks/useFirebaseUser'
 import { api } from '../lib/api'
 import { Link, useNavigate } from 'react-router-dom'
+import UploadCodesModal from '../components/UploadCodesModal'
 
 type Coupon = {
   id: string
@@ -16,6 +17,7 @@ export default function AdminCoupons() {
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [uploadId, setUploadId] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -46,34 +48,41 @@ export default function AdminCoupons() {
       <h1 className="text-2xl font-bold mb-4">All Coupons</h1>
       {loading && <p>Loading coupons...</p>}
       {error && <p className="text-red-600">{error}</p>}
-      {!loading && (
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr>
-              <th className="py-2 px-4 border">Title</th>
-              <th className="py-2 px-4 border">Code</th>
-              <th className="py-2 px-4 border">Start</th>
-              <th className="py-2 px-4 border">End</th>
-              <th className="py-2 px-4 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {coupons.map(c => (
-              <tr key={c.id} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border">{c.title}</td>
-                <td className="py-2 px-4 border font-mono">{c.code}</td>
-                <td className="py-2 px-4 border">{new Date(c.startDate).toLocaleDateString()}</td>
-                <td className="py-2 px-4 border">{new Date(c.endDate).toLocaleDateString()}</td>
-                <td className="py-2 px-4 border space-x-2 text-sm">
-                  <button onClick={() => navigate(`/admin/coupons/${c.id}/edit`)} className="text-blue-600 hover:underline">Edit</button>
-                  <button onClick={() => handleDelete(c.id)} className="text-red-600 hover:underline">Delete</button>
-                  <Link to={`/admin/coupons/${c.id}/redemptions`} className="text-green-600 hover:underline">Redemptions</Link>
-                </td>
+        {!loading && (
+          <table className="min-w-full bg-white border">
+            <thead>
+              <tr>
+                <th className="py-2 px-4 border">Title</th>
+                <th className="py-2 px-4 border">Code</th>
+                <th className="py-2 px-4 border">Start</th>
+                <th className="py-2 px-4 border">End</th>
+                <th className="py-2 px-4 border">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  )
-}
+            </thead>
+            <tbody>
+              {coupons.map(c => (
+                <tr key={c.id} className="hover:bg-gray-50">
+                  <td className="py-2 px-4 border">{c.title}</td>
+                  <td className="py-2 px-4 border font-mono">{c.code}</td>
+                  <td className="py-2 px-4 border">{new Date(c.startDate).toLocaleDateString()}</td>
+                  <td className="py-2 px-4 border">{new Date(c.endDate).toLocaleDateString()}</td>
+                  <td className="py-2 px-4 border space-x-2 text-sm">
+                    <button onClick={() => navigate(`/admin/coupons/${c.id}/edit`)} className="text-blue-600 hover:underline">Edit</button>
+                    <button onClick={() => handleDelete(c.id)} className="text-red-600 hover:underline">Delete</button>
+                    <Link to={`/admin/coupons/${c.id}/redemptions`} className="text-green-600 hover:underline">Redemptions</Link>
+                    <button onClick={() => setUploadId(c.id)} className="text-purple-600 hover:underline">Upload Codes</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        {uploadId && (
+          <UploadCodesModal
+            couponId={uploadId}
+            onClose={() => setUploadId(null)}
+          />
+        )}
+      </div>
+    )
+  }
