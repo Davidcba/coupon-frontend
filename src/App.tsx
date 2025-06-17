@@ -4,6 +4,9 @@ import Login from './pages/Login'
 import CouponList from './pages/CouponsList'
 import CouponDetail from './pages/CouponDetail'
 import RedemptionHistory from './pages/RedemptionHistory'
+import AdminCoupons from './pages/AdminCoupons'
+import EditCoupon from './pages/EditCoupon'
+import CouponRedemptions from './pages/CouponRedemptions'
 import PrivateRoute from './components/PrivateRoute'
 import Logout from './pages/Logout'
 
@@ -29,6 +32,21 @@ function App() {
         <Route path="/redemptions" element={
           <PrivateRoute>
             <RedemptionHistory />
+          </PrivateRoute>
+        } />
+        <Route path="/admin/coupons" element={
+          <PrivateRoute>
+            <AdminCoupons />
+          </PrivateRoute>
+        } />
+        <Route path="/admin/coupons/:id/edit" element={
+          <PrivateRoute>
+            <EditCoupon />
+          </PrivateRoute>
+        } />
+        <Route path="/admin/coupons/:id/redemptions" element={
+          <PrivateRoute>
+            <CouponRedemptions />
           </PrivateRoute>
         } />
         <Route path="/logout" element={<Logout />} />

@@ -1,4 +1,4 @@
-export const api = async <T = any>(
+export const api = async <T>(
     path: string,
     token: string,
     options: RequestInit = {},
