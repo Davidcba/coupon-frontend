@@ -4,6 +4,7 @@ import { auth } from '../firebase'
 import { useState } from 'react'
 import SideNav from './SideNav'
 import { useIsAdmin } from '../hooks/useIsAdmin'
+import { useUserInfo } from '../hooks/useUserInfo'
 
 export default function Navbar() {
   const [user] = useAuthState(auth)
@@ -12,6 +13,7 @@ export default function Navbar() {
   const [search, setSearch] = useState('')
   const [navOpen, setNavOpen] = useState(false)
   const isAdmin = useIsAdmin()
+  useUserInfo()
 
   const handleLogout = async () => {
     await auth.signOut()
