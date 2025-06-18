@@ -26,6 +26,7 @@ export default function Navbar() {
   const logoSrc = isLoggedIn ? '/tucheck-white.svg' : '/tucheck.svg'
 
   return (
+    <>
     <nav className={`w-full px-6 py-3 ${bgColor} shadow-md flex items-center justify-between transition-colors duration-300 sticky top-0 z-50`}>
       {/* Left: Logo */}
       <Link to="/" className="flex items-center">
@@ -83,5 +84,7 @@ export default function Navbar() {
       )}
     </nav>
     <SideNav open={navOpen} onClose={() => setNavOpen(false)} isAdmin={isAdmin} />
+    </>
+
   )
 }

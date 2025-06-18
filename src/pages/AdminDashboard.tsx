@@ -40,7 +40,13 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!token || !companyId) return
+    if (!token) return
+    if (!companyId) {
+      setError('Missing company ID')
+      setLoading(false)
+      return
+    }
+
 
     api<DashboardData>(`/dashboard/summary/${companyId}`, token)
       .then(setData)
