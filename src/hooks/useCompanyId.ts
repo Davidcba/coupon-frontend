@@ -1,9 +1,14 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useFirebaseUser } from './useFirebaseUser'
 
 export const useCompanyId = () => {
   const token = useFirebaseUser()
-  return useMemo(() => {
+  const companyId = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('companyId')
+      if (stored) return stored
+    }
+
     if (!token) return null
     try {
       const base64 = token.split('.')[1]
@@ -19,4 +24,15 @@ export const useCompanyId = () => {
       return null
     }
   }, [token])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (companyId) {
+      sessionStorage.setItem('companyId', companyId)
+    } else if (!token) {
+      sessionStorage.removeItem('companyId')
+    }
+  }, [companyId, token])
+
+  return companyId
 }
