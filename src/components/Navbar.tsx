@@ -2,12 +2,16 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from '../firebase'
 import { useState } from 'react'
+import SideNav from './SideNav'
+import { useIsAdmin } from '../hooks/useIsAdmin'
 
 export default function Navbar() {
   const [user] = useAuthState(auth)
   const navigate = useNavigate()
   const location = useLocation()
   const [search, setSearch] = useState('')
+  const [navOpen, setNavOpen] = useState(false)
+  const isAdmin = useIsAdmin()
 
   const handleLogout = async () => {
     await auth.signOut()
@@ -22,6 +26,7 @@ export default function Navbar() {
   const logoSrc = isLoggedIn ? '/tucheck-white.svg' : '/tucheck.svg'
 
   return (
+    <>
     <nav className={`w-full px-6 py-3 ${bgColor} shadow-md flex items-center justify-between transition-colors duration-300 sticky top-0 z-50`}>
       {/* Left: Logo */}
       <Link to="/" className="flex items-center">
@@ -66,12 +71,19 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* Mobile-friendly Hamburger (optional) */}
+      {/* Mobile-friendly Hamburger */}
       {isLoggedIn && (
-        <div className="md:hidden">
-          {/* Optional future: add hamburger menu here */}
-        </div>
+        <button
+          className="md:hidden text-white"
+          onClick={() => setNavOpen(true)}
+        >
+          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
       )}
     </nav>
+    <SideNav open={navOpen} onClose={() => setNavOpen(false)} isAdmin={isAdmin} />
+    </>
   )
 }

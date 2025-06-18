@@ -9,6 +9,7 @@ import {
   Legend,
 } from 'chart.js'
 import { useFirebaseUser } from '../hooks/useFirebaseUser'
+import { useCompanyId } from '../hooks/useCompanyId'
 import { api } from '../lib/api'
 
 Chart.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -33,21 +34,27 @@ export type DashboardData = {
 
 export default function AdminDashboard() {
   const token = useFirebaseUser()
+  const companyId = useCompanyId()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!token) return
+    if (!companyId) {
+      setError('Missing company ID')
+      setLoading(false)
+      return
+    }
 
-    api<DashboardData>('/dashboard', token)
+    api<DashboardData>(`/dashboard/summary/${companyId}`, token)
       .then(setData)
       .catch(err => {
         console.error(err)
         setError('Failed to load dashboard')
       })
       .finally(() => setLoading(false))
-  }, [token])
+  }, [token, companyId])
 
   if (loading) return <p className="p-4">Loading dashboard...</p>
   if (error) return <p className="p-4 text-red-600">{error}</p>
