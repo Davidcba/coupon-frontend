@@ -1,3 +1,9 @@
+
+import { useUserInfo } from './useUserInfo'
+
+export const useCompanyId = () => {
+  const { companyId } = useUserInfo()
+
 import { useEffect, useMemo } from 'react'
 import { useFirebaseUser } from './useFirebaseUser'
 
