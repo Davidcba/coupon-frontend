@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword, getIdTokenResult } from 'firebase/auth'
 import { auth } from '../firebase'
 import { useNavigate } from 'react-router-dom'
 
@@ -13,8 +13,13 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await signInWithEmailAndPassword(auth, email, password)
-      navigate('/')
+      const cred = await signInWithEmailAndPassword(auth, email, password)
+      const tokenResult = await getIdTokenResult(cred.user)
+      if (tokenResult.claims.admin || tokenResult.claims.role === 'admin') {
+        navigate('/admin/dashboard')
+      } else {
+        navigate('/')
+      }
     } catch (err) {
       console.error(err)
       setError('Invalid email or password')
