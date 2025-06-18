@@ -9,8 +9,8 @@ import {
   Legend,
 } from 'chart.js'
 import { useFirebaseUser } from '../hooks/useFirebaseUser'
-import { useCompanyId } from '../hooks/useCompanyId'
 import { api } from '../lib/api'
+import { useCompanyId } from '../hooks/useCompanyId'
 
 Chart.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -46,7 +46,6 @@ export default function AdminDashboard() {
       setLoading(false)
       return
     }
-
 
     api<DashboardData>(`/dashboard/summary/${companyId}`, token)
       .then(setData)
