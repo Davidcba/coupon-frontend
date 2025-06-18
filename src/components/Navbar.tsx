@@ -85,5 +85,6 @@ export default function Navbar() {
     </nav>
     <SideNav open={navOpen} onClose={() => setNavOpen(false)} isAdmin={isAdmin} />
     </>
+
   )
 }

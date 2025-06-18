@@ -47,6 +47,7 @@ export default function AdminDashboard() {
       return
     }
 
+
     api<DashboardData>(`/dashboard/summary/${companyId}`, token)
       .then(setData)
       .catch(err => {
