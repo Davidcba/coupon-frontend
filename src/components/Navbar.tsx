@@ -14,7 +14,7 @@ export default function Navbar() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (!search.trim()) return
-    navigate(`/search?q=${encodeURIComponent(search.trim())}`)
+    navigate(`/search?keyword=${encodeURIComponent(search.trim())}`)
   }
   const [navOpen, setNavOpen] = useState(false)
   const isAdmin = useIsAdmin()

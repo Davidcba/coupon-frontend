@@ -16,7 +16,7 @@ type Coupon = {
 
 export default function SearchResults() {
   const [searchParams] = useSearchParams()
-  const query = searchParams.get('q') || ''
+  const query = searchParams.get('keyword') || ''
   const token = useFirebaseUser()
   const [results, setResults] = useState<Coupon[]>([])
   const [loading, setLoading] = useState(false)
@@ -26,7 +26,7 @@ export default function SearchResults() {
     if (!query || !token) return
     setLoading(true)
     setError(null)
-    api<Coupon[]>(`/coupons/search?q=${encodeURIComponent(query)}`, token)
+    api<Coupon[]>(`/coupons/search?keyword=${encodeURIComponent(query)}`, token)
       .then(setResults)
       .catch(() => setError('Failed to fetch results'))
       .finally(() => setLoading(false))
