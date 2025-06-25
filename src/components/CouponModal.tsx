@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { useFirebaseUser } from '../hooks/useFirebaseUser'
+import { api } from '../lib/api'
 
 type Coupon = {
   id: string
@@ -16,6 +18,21 @@ type CouponModalProps = {
 
 const CouponModal: React.FC<CouponModalProps> = ({ coupon, onClose }) => {
   const [showCode, setShowCode] = useState(false)
+  const token = useFirebaseUser()
+
+  const handleShowCode = async () => {
+    if (!token) {
+      setShowCode(true)
+      return
+    }
+    try {
+      await api(`/coupons/${coupon.id}/redeem`, token, { method: 'POST' })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setShowCode(true)
+    }
+  }
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
@@ -38,7 +55,7 @@ const CouponModal: React.FC<CouponModalProps> = ({ coupon, onClose }) => {
         {/* Show/Reveal code button */}
         {!showCode ? (
           <button
-            onClick={() => setShowCode(true)}
+            onClick={handleShowCode}
             className="w-full py-2 px-4 bg-[#3B3B98] text-white font-bold rounded hover:bg-[#2a2a7e]"
           >
             Mostrar Código

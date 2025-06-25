@@ -1,5 +1,4 @@
 
-import { useUserInfo } from './useUserInfo'
 import { useEffect, useMemo } from 'react'
 import { useFirebaseUser } from './useFirebaseUser'
 // Use native window.sessionStorage instead of importing from '../lib/storage'
