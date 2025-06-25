@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from '../firebase'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import SideNav from './SideNav'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import { useUserInfo } from '../hooks/useUserInfo'
@@ -11,6 +11,11 @@ export default function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [search, setSearch] = useState('')
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!search.trim()) return
+    navigate(`/search?q=${encodeURIComponent(search.trim())}`)
+  }
   const [navOpen, setNavOpen] = useState(false)
   const isAdmin = useIsAdmin()
   useUserInfo()
@@ -38,7 +43,7 @@ export default function Navbar() {
       {/* Center: Search Bar */}
       {isLoggedIn && (
         <div className="flex-1 flex justify-center">
-          <div className="flex items-center border rounded-full px-3 py-1 bg-white w-full max-w-md transition hover:shadow-lg">
+          <form onSubmit={handleSearch} className="flex items-center border rounded-full px-3 py-1 bg-white w-full max-w-md transition hover:shadow-lg">
             <input
               type="text"
               placeholder="Search..."
@@ -46,8 +51,8 @@ export default function Navbar() {
               onChange={(e) => setSearch(e.target.value)}
               className="bg-transparent outline-none px-2 text-sm text-gray-700 w-full"
             />
-            <button className="text-sm text-[#3B3B98] font-medium hover:underline">Go</button>
-          </div>
+            <button type="submit" className="text-sm text-[#3B3B98] font-medium hover:underline">Go</button>
+          </form>
         </div>
       )}
 
