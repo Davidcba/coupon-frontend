@@ -21,7 +21,7 @@ export default function RedemptionHistory() {
   useEffect(() => {
     if (!token) return
 
-    api<Redemption[]>('/redemptions/my-redemptions', token)
+    api<Redemption[]>('/coupons/redemptions/my', token)
       .then(setRedemptions)
       .catch((err) => {
         console.error(err)

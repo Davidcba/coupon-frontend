@@ -41,7 +41,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!token) return
-    if (!companyId) {
+    if (companyId === undefined || companyId === null) {
       setError('Missing company ID')
       setLoading(false)
       return
