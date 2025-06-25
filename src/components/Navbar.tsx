@@ -1,24 +1,64 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from '../firebase'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import SideNav from './SideNav'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import { useUserInfo } from '../hooks/useUserInfo'
+import { useFirebaseUser } from '../hooks/useFirebaseUser'
+import { api } from '../lib/api'
+
+type Coupon = {
+  id: string
+  title: string
+  code: string
+  endDate: string
+  description?: string
+  terms?: string
+  category?: string
+}
 
 export default function Navbar() {
   const [user] = useAuthState(auth)
   const navigate = useNavigate()
   const location = useLocation()
   const [search, setSearch] = useState('')
+  const [suggestions, setSuggestions] = useState<Coupon[]>([])
+  const token = useFirebaseUser()
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (!search.trim()) return
     navigate(`/search?keyword=${encodeURIComponent(search.trim())}`)
+    setSuggestions([])
+  }
+
+  const handleSuggestionClick = (id: string) => {
+    navigate(`/coupon/${id}`)
+    setSuggestions([])
+    setSearch('')
   }
   const [navOpen, setNavOpen] = useState(false)
   const isAdmin = useIsAdmin()
   useUserInfo()
+
+  useEffect(() => {
+    if (!search.trim()) {
+      setSuggestions([])
+      return
+    }
+
+    const handler = setTimeout(() => {
+      if (!token) return
+      api<Coupon[]>(
+        `/coupons/search?keyword=${encodeURIComponent(search.trim())}`,
+        token,
+      )
+        .then(data => setSuggestions(data.slice(0, 5)))
+        .catch(() => setSuggestions([]))
+    }, 300)
+
+    return () => clearTimeout(handler)
+  }, [search, token])
 
   const handleLogout = async () => {
     await auth.signOut()
@@ -42,7 +82,7 @@ export default function Navbar() {
 
       {/* Center: Search Bar */}
       {isLoggedIn && (
-        <div className="flex-1 flex justify-center">
+        <div className="flex-1 flex justify-center relative">
           <form onSubmit={handleSearch} className="flex items-center border rounded-full px-3 py-1 bg-white w-full max-w-md transition hover:shadow-lg">
             <input
               type="text"
@@ -53,6 +93,19 @@ export default function Navbar() {
             />
             <button type="submit" className="text-sm text-[#3B3B98] font-medium hover:underline">Go</button>
           </form>
+          {suggestions.length > 0 && (
+            <div className="absolute top-full mt-1 w-full max-w-md bg-white border rounded-md shadow-lg z-50">
+              {suggestions.map(s => (
+                <div
+                  key={s.id}
+                  onMouseDown={() => handleSuggestionClick(s.id)}
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                >
+                  {s.title}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
