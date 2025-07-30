@@ -1,85 +1,240 @@
-import { useFirebaseUser } from '../hooks/useFirebaseUser'
-import { api } from '../lib/api'
-import { useEffect, useState } from 'react'
-import FilterBar from '../components/FilterBar'
-import CouponCard from '../components/CouponCard'
-import CouponModal from '../components/CouponModal'
-import CouponCarousel from '../components/CouponCarousel'
+import { useEffect, useState } from 'react';
+import {
+  faSearch,
+  faBars,
+  faUser,
+  faUtensils,
+  faTicketAlt,
+  faTshirt,
+  faSpa,
+  faPlane,
+  faHome,
+  faCar,
+  faBookOpen,
+  faShoppingBasket,
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import CouponCard from '../components/CouponCard';
+import CouponModal from '../components/CouponModal';
+import SideNav from '../components/SideNav';
+import Hero from '../components/Hero';
 
-type Coupon = {
-  id: string
-  title: string
-  code: string
-  endDate: string
-  description?: string
-  terms?: string
-  category?: string
+// Define the coupon type
+interface Coupon {
+  id: string;
+  title: string;
+  description: string;
+  code: string;
+  endDate: string;
+  imageUrl: string;
+  category: string;
 }
-const featuredCoupons = [
-  { id: '1', title: '50% OFF Pizza', imageUrl: '/images/pizza.jpeg' },
-  { id: '2', title: 'Free Dessert', imageUrl: '/images/dessert.jpeg' },
-  { id: '3', title: 'Buy 1 Get 1', imageUrl: '/images/bogo.jpeg' },
-]
 
-export default function CouponList() {
-  const token = useFirebaseUser()
-  const [coupons, setCoupons] = useState<Coupon[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
+// Hardcoded list of coupons used while the API integration is disabled.
+// Re-enable the API call in useEffect below once ready.
+const sampleCoupons: Coupon[] = [
+  {
+    id: 'c1',
+    title: 'Sushiman',
+    description: '25% Off en tu próxima compra en nuestros locales adheridos a esta promoción.',
+    code: 'SUSHI25',
+    endDate: '2025-09-18',
+    imageUrl: '/images/sushi.png',
+    category: 'Restaurantes',
+  },
+  {
+    id: 'c2',
+    title: 'HP Farma',
+    description: '15% Off en antigripales.',
+    code: 'HP15',
+    endDate: '2025-10-01',
+    imageUrl: '/images/pharmacy.png',
+    category: 'Salud y Belleza',
+  },
+  {
+    id: 'c3',
+    title: 'Burger King',
+    description: '20% Off en tu próxima compra.',
+    code: 'BK20',
+    endDate: '2025-11-01',
+    imageUrl: '/images/burger_fries.png',
+    category: 'Restaurantes',
+  },
+  {
+    id: 'c4',
+    title: 'Glow Gym',
+    description: '20% de descuento en tu rutina personal.',
+    code: 'GYM20',
+    endDate: '2025-09-30',
+    imageUrl: '/images/gym.png',
+    category: 'Salud y Belleza',
+  },
+  {
+    id: 'c5',
+    title: 'Pesso',
+    description: '15% off en tu próxima herramienta.',
+    code: 'TOOL15',
+    endDate: '2025-12-15',
+    imageUrl: '/images/power_drill.png',
+    category: 'Hogar y Jardín',
+  },
+];
 
+// Categories with icons
+const categories = [
+  { label: 'Bar/Restaurante', icon: faUtensils },
+  { label: 'Entretenimiento', icon: faTicketAlt },
+  { label: 'Indumentaria', icon: faTshirt },
+  { label: 'Salud y Belleza', icon: faSpa },
+  { label: 'Viajes', icon: faPlane },
+  { label: 'Hogar y Jardín', icon: faHome },
+  { label: 'Automóvil', icon: faCar },
+  { label: 'Educación', icon: faBookOpen },
+  { label: 'Supermercados', icon: faShoppingBasket },
+];
+
+export default function CouponsList() {
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Load coupons. API call is commented out for now.
   useEffect(() => {
-    if (!token) return
-    setLoading(true)
-    api<Coupon[]>('/coupons/my-coupons', token)
-      .then(setCoupons)
-      .catch((err) => {
-        console.error(err)
-        setError('Failed to load coupons')
-      })
-      .finally(() => setLoading(false))
-  }, [token])
+    /*
+    // Example of how to fetch coupons from the backend:
+    const token = useFirebaseUser();
+    if (!token) return;
+    api('/coupons/my-coupons', token)
+      .then((data: Coupon[]) => setCoupons(data))
+      .catch(err => console.error(err));
+    */
+    setCoupons(sampleCoupons);
+  }, []);
 
-  const categories = ['Restaurantes', 'Mercados', 'Helados', 'Café & Deli', 'Kioscos']
   const filteredCoupons = selectedCategory
-    ? coupons.filter(c => c.category === selectedCategory)
-    : coupons
+    ? coupons.filter((c) => c.category === selectedCategory)
+    : coupons;
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-center text-[#3B3B98] mb-8">🎟️ Tus Cupones Disponibles</h1>
-         <CouponCarousel coupons={featuredCoupons} />
-        <FilterBar
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
-
-        {loading && <p className="text-center text-gray-500">Cargando cupones...</p>}
-        {error && <p className="text-center text-red-600">{error}</p>}
-        {!loading && filteredCoupons.length === 0 && (
-          <p className="text-center text-gray-500">No hay cupones disponibles</p>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredCoupons.map(coupon => (
-            <div
-              key={coupon.id}
-              onClick={() => setSelectedCoupon(coupon)}
-              className="cursor-pointer"
-            >
-              <CouponCard coupon={coupon} onCopy={() => {}} />
+    <div className="relative min-h-screen bg-gray-100">
+      {/* Navigation bar */}
+      <header className="bg-blue-800 text-white sticky top-0 z-40 shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+          <button
+            className="md:hidden text-white mr-4"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+          >
+            <FontAwesomeIcon icon={faBars} size="lg" />
+          </button>
+          <h1 className="text-2xl font-bold tracking-wide">tucheck</h1>
+          <div className="flex items-center space-x-4 flex-1 md:flex-none">
+            <div className="hidden md:flex flex-1 relative">
+              <FontAwesomeIcon
+                icon={faSearch}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="text"
+                className="w-full pl-10 pr-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-900"
+                placeholder="Buscar en tucheck tu próximo beneficio"
+              />
             </div>
+            <button className="hidden md:flex items-center px-3 py-1 border border-white rounded-full text-sm hover:bg-blue-700 transition">
+              <FontAwesomeIcon icon={faUser} className="mr-2" />
+              Perfil
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile search bar */}
+      <div className="md:hidden px-4 mt-4">
+        <div className="relative">
+          <FontAwesomeIcon
+            icon={faSearch}
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          />
+          <input
+            type="text"
+            className="w-full pl-10 pr-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-900"
+            placeholder="Buscar en tucheck tu próximo beneficio"
+          />
+        </div>
+      </div>
+
+      {/* Hero section */}
+      <div className="mt-6 px-4 md:px-8">
+        <Hero />
+      </div>
+
+      {/* Featured cards */}
+      <div className="mt-8 px-4 md:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {sampleCoupons.slice(0, 3).map((c) => (
+          <div
+            key={c.id}
+            className="bg-white rounded-lg shadow hover:shadow-md transition flex items-center p-4 space-x-4"
+          >
+            <img
+              src={c.imageUrl}
+              alt={c.title}
+              className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+            />
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-800 text-sm">{c.title}</h3>
+              <p className="text-xs text-gray-500 truncate">{c.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Categories */}
+      <div className="mt-8 px-4 md:px-8">
+        <h2 className="text-lg font-semibold mb-4 text-gray-700">Categorias</h2>
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-9 gap-4">
+          {categories.map(({ label, icon }) => (
+            <button
+              key={label}
+              onClick={() => setSelectedCategory(label)}
+              className={`flex flex-col items-center justify-center p-2 rounded-lg border hover:bg-gray-100 transition ${
+                selectedCategory === label ? 'bg-blue-100 border-blue-500' : 'bg-white'
+              }`}
+            >
+              <FontAwesomeIcon icon={icon} size="lg" className="text-blue-600" />
+              <span className="mt-2 text-xs text-gray-700 text-center leading-tight">
+                {label}
+              </span>
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Coupon Modal */}
+      {/* Coupon grid */}
+      <div className="mt-8 px-4 md:px-8 mb-16">
+        <h2 className="text-lg font-semibold mb-4 text-gray-700">Cupones disponibles</h2>
+        {filteredCoupons.length === 0 ? (
+          <p className="text-gray-500">No hay cupones disponibles.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredCoupons.map((coupon: Coupon) => (
+              <CouponCard
+                key={coupon.id}
+                coupon={coupon}
+                onClick={() => setSelectedCoupon(coupon)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Coupon modal */}
       {selectedCoupon && (
         <CouponModal coupon={selectedCoupon} onClose={() => setSelectedCoupon(null)} />
       )}
+
+      {/* Side navigation for mobile */}
+      <SideNav open={menuOpen} onClose={() => setMenuOpen(false)} isAdmin={false} />
     </div>
-  )
+  );
 }

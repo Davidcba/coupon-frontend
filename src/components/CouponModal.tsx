@@ -1,75 +1,65 @@
-import React, { useState } from 'react'
-import { useFirebaseUser } from '../hooks/useFirebaseUser'
-import { api } from '../lib/api'
+import { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
-type Coupon = {
-  id: string
-  title: string
-  description?: string
-  terms?: string
-  code: string
-  endDate: string
+interface CouponModalProps {
+  coupon: {
+    id: string;
+    title: string;
+    description: string;
+    code: string;
+    endDate: string;
+    imageUrl: string;
+    category: string;
+  };
+  onClose: () => void;
 }
 
-type CouponModalProps = {
-  coupon: Coupon
-  onClose: () => void
-}
-
-const CouponModal: React.FC<CouponModalProps> = ({ coupon, onClose }) => {
-  const [showCode, setShowCode] = useState(false)
-  const token = useFirebaseUser()
-
-  const handleShowCode = async () => {
-    if (!token) {
-      setShowCode(true)
-      return
-    }
-    try {
-      await api(`/coupons/${coupon.id}/redeem`, token, { method: 'POST' })
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setShowCode(true)
-    }
-  }
+/**
+ * Modal that displays coupon details. Click "Mostrar código" to reveal the code.
+ */
+export default function CouponModal({ coupon, onClose }: CouponModalProps) {
+  const [showCode, setShowCode] = useState(false);
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
-        {/* Close Button */}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
+      onClick={onClose}
+    >
+      <div
+        className="relative bg-white rounded-xl shadow-lg max-w-md w-full mx-4 p-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
+          className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-600 hover:text-red-500 text-xl"
+          aria-label="Cerrar"
         >
-          ×
+          <FontAwesomeIcon icon={faXmark} size="lg" />
         </button>
-
-        <h2 className="text-2xl font-bold mb-2 text-[#3B3B98]">{coupon.title}</h2>
-        <p className="text-sm text-gray-700 mb-2">{coupon.description}</p>
-        <p className="text-xs text-gray-500 mb-4">{coupon.terms || 'Términos y condiciones aplican.'}</p>
-        <p className="text-sm text-gray-600 mb-4">
-          Válido hasta: {new Date(coupon.endDate).toLocaleDateString()}
+        <img
+          src={coupon.imageUrl}
+          alt={coupon.title}
+          className="w-full h-48 object-cover rounded-md"
+        />
+        <h2 className="mt-4 text-2xl font-bold text-gray-800">{coupon.title}</h2>
+        <p className="mt-2 text-sm text-gray-600">{coupon.description}</p>
+        <p className="mt-1 text-xs text-gray-400">
+          Válido hasta {new Date(coupon.endDate).toLocaleDateString()}
         </p>
-
-        {/* Show/Reveal code button */}
         {!showCode ? (
           <button
-            onClick={handleShowCode}
-            className="w-full py-2 px-4 bg-[#3B3B98] text-white font-bold rounded hover:bg-[#2a2a7e]"
+            onClick={() => setShowCode(true)}
+            className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-md transition"
           >
-            Mostrar Código
+            Mostrar código
           </button>
         ) : (
-          <div className="text-center mt-4">
-            <p className="font-mono text-lg bg-gray-100 inline-block px-4 py-2 rounded">
-              {coupon.code}
-            </p>
+          <div className="mt-6 py-3 text-center text-2xl font-bold text-gray-800 bg-gray-100 rounded-md">
+            {coupon.code}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
-
-export default CouponModal
