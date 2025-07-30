@@ -3,3 +3,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.bg-login {
+  background-image: url('/bg-login-mobile.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+@media (min-width: 768px) {
+  .bg-login {
+    background-image: url('/bg-login-desktop.png');
+  }
+}

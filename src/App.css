@@ -40,3 +40,15 @@
 .read-the-docs {
   color: #888;
 }
+.bg-login {
+  background-image: url('/LoginBackgroundMobile.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+@media (min-width: 768px) {
+  .bg-login {
+    background-image: url('/LogginBackgroundDesktop.png');
+  }
+}
