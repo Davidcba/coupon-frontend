@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react'
-import { useFirebaseUser } from '../hooks/useFirebaseUser'
 import { api } from '../lib/api'
+import { useAuthToken } from '../hooks/useAuthToken'
 
 export type Brand = {
   id: string
@@ -8,7 +8,7 @@ export type Brand = {
 }
 
 export default function AdminBrands() {
-  const token = useFirebaseUser()
+  const token = useAuthToken()
   const [brands, setBrands] = useState<Brand[]>([])
   const [newBrand, setNewBrand] = useState('')
   const [error, setError] = useState<string | null>(null)

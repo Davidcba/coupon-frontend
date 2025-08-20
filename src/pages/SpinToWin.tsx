@@ -1,7 +1,7 @@
-import { useFirebaseUser } from '../hooks/useFirebaseUser'
 import { api } from '../lib/api'
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
+import { useAuthToken } from '../hooks/useAuthToken'
 
 type Coupon = {
   id: string
@@ -11,7 +11,7 @@ type Coupon = {
 }
 
 export default function SpinToWin() {
-  const token = useFirebaseUser()
+  const token = useAuthToken()
   const [coupon, setCoupon] = useState<Coupon | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

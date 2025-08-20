@@ -4,7 +4,7 @@ import { api } from '../lib/api'
 import { FeatureFlags } from '../types/Feature'
 
 export const useFeatures = () => {
-  const token = useFirebaseUser()
+  const { token } = useFirebaseUser()
   const [features, setFeatures] = useState<FeatureFlags>({})
   const [loading, setLoading] = useState(true)
 

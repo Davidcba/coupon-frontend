@@ -13,7 +13,8 @@ type Redemption = {
 }
 
 export default function RedemptionHistory() {
-  const token = useFirebaseUser()
+  const user = useFirebaseUser()
+  const token = user?.token // or user?.uid, depending on your hook's implementation
   const [redemptions, setRedemptions] = useState<Redemption[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)

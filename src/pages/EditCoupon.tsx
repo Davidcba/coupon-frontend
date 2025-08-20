@@ -1,7 +1,7 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useFirebaseUser } from '../hooks/useFirebaseUser'
 import { api } from '../lib/api'
+import { useAuthToken } from '../hooks/useAuthToken'
 
 type Coupon = {
   id: string
@@ -13,7 +13,7 @@ type Coupon = {
 
 export default function EditCoupon() {
   const { id } = useParams()
-  const token = useFirebaseUser()
+  const token = useAuthToken()
   const navigate = useNavigate()
   const [coupon, setCoupon] = useState<Coupon | null>(null)
   const [error, setError] = useState<string | null>(null)

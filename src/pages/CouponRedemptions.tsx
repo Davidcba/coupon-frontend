@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { useFirebaseUser } from '../hooks/useFirebaseUser'
 import { api } from '../lib/api'
+import { useAuthToken } from '../hooks/useAuthToken'
 
 type Redemption = {
   id: string
@@ -10,7 +10,7 @@ type Redemption = {
 
 export default function CouponRedemptions() {
   const { id } = useParams()
-  const token = useFirebaseUser()
+  const token = useAuthToken()
   const [redemptions, setRedemptions] = useState<Redemption[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)

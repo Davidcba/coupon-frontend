@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from '../firebase'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import SideNav from './SideNav'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import { useUserInfo } from '../hooks/useUserInfo'
@@ -25,13 +25,15 @@ export default function Navbar() {
   const location = useLocation()
   const [search, setSearch] = useState('')
   const [suggestions, setSuggestions] = useState<Coupon[]>([])
-  const token = useFirebaseUser()
+  const { token } = useFirebaseUser()
   const [navOpen, setNavOpen] = useState(false)
-  const isAdmin = useIsAdmin()
+  const { isAdmin } = useIsAdmin()
   useUserInfo()
 
   const isLoginPage = location.pathname === '/login'
   const isLoggedIn = !!user && !isLoginPage
+  const tokenRef = useRef<string | null>(null);
+useEffect(() => { tokenRef.current = token; }, [token]);
 
   const bgColor = isLoggedIn ? 'bg-[#3B3B98]' : 'bg-white'
   const textColor = isLoggedIn ? 'text-white' : 'text-gray-800'
@@ -50,25 +52,33 @@ export default function Navbar() {
     setSearch('')
   }
 
-  useEffect(() => {
-    if (!search.trim()) {
-      setSuggestions([])
-      return
+useEffect(() => {
+  const q = search.trim();
+
+  if (!q) {
+    // avoid useless re-renders: only set when actually changing value
+    setSuggestions(prev => (prev.length ? [] : prev));
+    return;
+  }
+
+  let cancelled = false;
+  const t = setTimeout(async () => {
+    const tkn = tokenRef.current;
+    if (!tkn) return; // wait until we have a token
+
+    try {
+      const data = await api<Coupon[]>(
+        `/coupons/search?keyword=${encodeURIComponent(q)}`,
+        tkn
+      );
+      if (!cancelled) setSuggestions(data.slice(0, 5));
+    } catch {
+      if (!cancelled) setSuggestions([]);
     }
+  }, 300);
 
-    const handler = setTimeout(() => {
-      if (!token) return
-      api<Coupon[]>(
-        `/coupons/search?keyword=${encodeURIComponent(search.trim())}`,
-        token,
-      )
-        .then(data => setSuggestions(data.slice(0, 5)))
-        .catch(() => setSuggestions([]))
-    }, 300)
-
-    return () => clearTimeout(handler)
-  }, [search, token])
-
+  return () => { cancelled = true; clearTimeout(t); };
+}, [search]); //
   const handleLogout = async () => {
     await auth.signOut()
     navigate('/login')

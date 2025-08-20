@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useFirebaseUser } from '../hooks/useFirebaseUser'
 import { api } from '../lib/api'
@@ -9,28 +9,47 @@ type Coupon = {
   title: string
   code: string
   endDate: string
-  description?: string
+  description: string
   terms?: string
-  category?: string
+  category: string
+  imageUrl: string | null
 }
 
 export default function SearchResults() {
   const [searchParams] = useSearchParams()
   const query = searchParams.get('keyword') || ''
-  const token = useFirebaseUser()
+const { token } = useFirebaseUser();
   const [results, setResults] = useState<Coupon[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
+  const tokenRef = useRef<string | null>(null);
+useEffect(() => { tokenRef.current = token; }, [token]);
   useEffect(() => {
-    if (!query || !token) return
-    setLoading(true)
-    setError(null)
-    api<Coupon[]>(`/coupons/search?keyword=${encodeURIComponent(query)}`, token)
-      .then(setResults)
-      .catch(() => setError('Failed to fetch results'))
-      .finally(() => setLoading(false))
-  }, [query, token])
+  if (!query?.trim()) { setResults([]); return; }
+
+  let cancelled = false;
+  setLoading(true);
+  setError(null);
+
+  const t = setTimeout(async () => {
+    const tkn = tokenRef.current;
+    if (!tkn) { if (!cancelled) setLoading(false); return; }
+
+    try {
+      const data = await api<Coupon[]>(
+        `/coupons/search?keyword=${encodeURIComponent(query.trim())}`,
+        tkn
+      );
+      if (!cancelled) setResults(data);
+    } catch {
+      if (!cancelled) setError('Failed to fetch results');
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  }, 300);
+
+  return () => { cancelled = true; clearTimeout(t); };
+}, [query]);
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] p-6">
@@ -46,7 +65,7 @@ export default function SearchResults() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {results.map(coupon => (
             <Link key={coupon.id} to={`/coupon/${coupon.id}`} className="cursor-pointer">
-              <CouponCard coupon={coupon} onCopy={() => {}} />
+              <CouponCard coupon={coupon} onClick={() => {}} />
             </Link>
           ))}
         </div>

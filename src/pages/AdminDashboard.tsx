@@ -1,138 +1,325 @@
-import React from 'react'
-import { Line, Doughnut } from 'react-chartjs-2'
+import { useEffect, useMemo, useState } from 'react';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from 'chart.js'
+  getCategories,
+  getDailyRedemptions,
+  getDashboardSummary,
+  getTopBrands,
+  getTopCoupons,
+  getTopViewed,
+  getDemographicsSummary,
+  type NamedRow,
+  type DailyRow,
+  type StatSummary,
+  type DemographicsSummary,
+} from '../lib/api';
+import { useAuthToken } from '../hooks/useAuthToken';
+import {
+  Bar, BarChart, CartesianGrid, Line, LineChart, Pie, PieChart, Tooltip,
+  XAxis, YAxis, ResponsiveContainer, Cell,
+} from 'recharts';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend)
-
-const AdminDashboard: React.FC = () => {
-  const redemptionData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-    datasets: [
-      {
-        label: 'Redemptions',
-        data: [100, 300, 250, 400, 450, 500, 600],
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  }
-
-  const audienceData = {
-    labels: ['Mobile', 'Tablet', 'Desktop'],
-    datasets: [
-      {
-        data: [60, 20, 20],
-        backgroundColor: ['#3b82f6', '#60a5fa', '#93c5fd'],
-        hoverOffset: 4,
-      },
-    ],
-  }
-
-  const demographicsData = {
-    labels: ['18-24', '25-34', '35-44', '45+'],
-    datasets: [
-      {
-        data: [25, 40, 20, 15],
-        backgroundColor: ['#34d399', '#10b981', '#059669', '#047857'],
-        hoverOffset: 4,
-      },
-    ],
-  }
-
+/* ---------- UI helpers ---------- */
+function Card({ title, children, right }:{
+  title: string; children: React.ReactNode; right?: React.ReactNode;
+}) {
   return (
-    <div className="p-8 space-y-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-
-      {/* Top metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-sm text-gray-500">Total Active Coupons</h2>
-          <p className="text-2xl font-bold">25</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-sm text-gray-500">Total Redemptions</h2>
-          <p className="text-2xl font-bold">1,492</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-sm text-gray-500">Top Performing Coupon</h2>
-          <p className="text-2xl font-bold">SUMMER25</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-sm text-gray-500">Redemption Rate</h2>
-          <p className="text-2xl font-bold">18.7%</p>
-        </div>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 md:p-5">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-base md:text-lg font-semibold text-gray-800">{title}</h3>
+        {right}
       </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-lg font-semibold mb-2">Redemption Trends</h2>
-          <Line data={redemptionData} />
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-lg font-semibold mb-2">Audience Insights</h2>
-          <div className="flex justify-around">
-            <div className="w-1/2">
-              <h3 className="text-sm font-medium mb-1">Device Types</h3>
-              <Doughnut data={audienceData} />
-            </div>
-            <div className="w-1/2">
-              <h3 className="text-sm font-medium mb-1">Demographics</h3>
-              <Doughnut data={demographicsData} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white p-4 rounded shadow overflow-x-auto">
-        <h2 className="text-lg font-semibold mb-4">Coupon Performance</h2>
-        <table className="min-w-full text-sm text-left">
-          <thead className="text-xs text-gray-500 uppercase border-b">
-            <tr>
-              <th className="px-4 py-2">Coupon Name</th>
-              <th className="px-4 py-2">Campaign</th>
-              <th className="px-4 py-2">Category</th>
-              <th className="px-4 py-2">Redemptions</th>
-              <th className="px-4 py-2">Impressions</th>
-              <th className="px-4 py-2">CTR</th>
-              <th className="px-4 py-2">Start Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              ['SAVE20', 'Spring Sale', 'Seasonal', 1024, '10,000', '4.7%', 'Sep 2020'],
-              ['WELCOME10', 'Q1 Promo', 'Welcome Offer', 1656, '7,500', '25%', 'Jun 2020'],
-              ['FREESHIP', 'Holiday Sale', 'Shipping', 1390, '12,400', '36%', 'Nov 2020'],
-              ['DISCOUNT15', 'Year-End', 'Clearance', 1003, '5,500', '28%', 'Nov 2020'],
-              ['BLACKFRIDAY', 'Black Friday', 'Clearance', 1350, '5,600', '30%', 'Feb 2021'],
-            ].map(([name, camp, cat, red, imp, ctr, date], i) => (
-              <tr key={i} className="border-b">
-                <td className="px-4 py-2">{name}</td>
-                <td className="px-4 py-2">{camp}</td>
-                <td className="px-4 py-2">{cat}</td>
-                <td className="px-4 py-2">{red}</td>
-                <td className="px-4 py-2">{imp}</td>
-                <td className="px-4 py-2">{ctr}</td>
-                <td className="px-4 py-2">{date}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {children}
     </div>
-  )
+  );
 }
 
-export default AdminDashboard
+function Stat({ label, value, hint }:{ label: string; value: number | string; hint?: string }) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="text-sm text-gray-500">{label}</div>
+      <div className="text-2xl font-bold mt-1">{value}</div>
+      {hint && <div className="text-xs text-gray-400 mt-0.5">{hint}</div>}
+    </div>
+  );
+}
+
+function Segmented({
+  value, onChange, options,
+}:{
+  value: string | number;
+  onChange: (v:any)=>void;
+  options: { label: string; value: any }[];
+}) {
+  return (
+    <div className="inline-flex rounded-xl border border-gray-200 overflow-hidden">
+      {options.map((opt, idx) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={[
+            'px-3 md:px-4 py-2 text-sm',
+            value === opt.value ? 'bg-gray-900 text-white' : 'bg-white hover:bg-gray-50',
+            idx !== options.length - 1 ? 'border-r border-gray-200' : '',
+          ].join(' ')}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const PIE_COLORS = ['#60a5fa', '#34d399', '#f472b6', '#f59e0b', '#a78bfa', '#f87171', '#22d3ee', '#4ade80'];
+
+/* ---------- Page ---------- */
+export default function AdminDashboard() {
+  const token = useAuthToken();              // string | null
+  const hasToken = !!token;
+
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError]     = useState<string | null>(null);
+
+  // controls
+  const [days, setDays]   = useState(30);
+  const [limit, setLimit] = useState(7);
+
+  // data
+  const [summary, setSummary]     = useState<StatSummary | null>(null);
+  const [daily, setDaily]         = useState<DailyRow[]>([]);
+  const [topViewed, setTopViewed] = useState<NamedRow[]>([]);
+  const [topBrands, setTopBrands] = useState<NamedRow[]>([]);
+  const [topCoupons, setTopCoupons] = useState<NamedRow[]>([]);
+  const [categories, setCategories] = useState<NamedRow[]>([]);
+  const [demos, setDemos] = useState<DemographicsSummary | null>(null);
+
+  useEffect(() => {
+    if (!token) return; // wait for auth
+    setLoading(true);
+    setError(null);
+
+    Promise
+      .all([
+        getDashboardSummary(token),
+        getDailyRedemptions(token, days),
+        getTopViewed(token, days, limit),
+        getTopBrands(token, limit),
+        getTopCoupons(token, limit),
+        getCategories(token),
+        getDemographicsSummary(token, days),
+      ])
+      .then(([s, d, tv, tb, tc, cat, dem]) => {
+        setSummary(s);
+        setDaily(d);
+        setTopViewed(tv);
+        setTopBrands(tb);
+        setTopCoupons(tc);
+        setCategories(cat);
+        setDemos(dem);
+      })
+      .catch(() => setError('No se pudieron cargar los datos'))
+      .finally(() => setLoading(false));
+  }, [token, days, limit]);
+
+  const dailyData = useMemo(
+    () => daily.map(r => ({ ...r, dayShort: r.day.slice(5) })), // e.g. "08-19"
+    [daily]
+  );
+
+  if (!hasToken) return <div className="p-6">Cargando…</div>;
+  if (loading)    return <div className="p-6">Cargando panel…</div>;
+  if (error)      return <div className="p-6 text-red-600">{error}</div>;
+
+  return (
+    <div className="p-4 md:p-6 space-y-6">
+      {/* stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Stat label="Cupones totales" value={summary?.totalCoupons ?? 0} />
+        <Stat label="Cupones activos" value={summary?.activeCoupons ?? 0} />
+        <Stat label="Usuarios" value={summary?.totalUsers ?? 0} />
+        <Stat
+          label="Canjes (30d)"
+          value={summary?.redemptions30d ?? 0}
+          hint={`Últimos 7d: ${summary?.redemptions7d ?? 0}`}
+        />
+      </div>
+
+      {/* controls */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Segmented
+          value={days}
+          onChange={setDays}
+          options={[
+            { label: '7 días', value: 7 },
+            { label: '30 días', value: 30 },
+            { label: '90 días', value: 90 },
+          ]}
+        />
+        <Segmented
+          value={limit}
+          onChange={setLimit}
+          options={[
+            { label: 'Top 5', value: 5 },
+            { label: 'Top 7', value: 7 },
+            { label: 'Top 10', value: 10 },
+          ]}
+        />
+      </div>
+
+      {/* daily */}
+      <Card title={`Canjes diarios (últimos ${days} días)`}>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={dailyData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="dayShort" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Line type="monotone" dataKey="count" stroke="#1f2937" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
+
+      {/* grids */}
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-25">
+        {/* Top viewed */}
+        <Card title={`Cupones más vistos (últimos ${days} días)`}>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topViewed}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" hide />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="count" />
+              </BarChart>
+            </ResponsiveContainer>
+
+            <ul className="mt-3 text-sm text-gray-600 space-y-1">
+              {topViewed.map((r, i) => (
+                <li key={i} className="truncate">{r.name} — {r.count}</li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+
+        {/* Top brands */}
+        <Card title={`Marcas con más canjes (Top ${limit})`}>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topBrands}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" hide />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="count" />
+              </BarChart>
+            </ResponsiveContainer>
+
+            <ul className="mt-3 text-sm text-gray-600 space-y-1">
+              {topBrands.map((r, i) => (
+                <li key={i} className="truncate">{r.name} — {r.count}</li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+
+        {/* Top coupons */}
+        <Card title={`Cupones con más canjes (Top ${limit})`}>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topCoupons}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" hide />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="count" />
+              </BarChart>
+            </ResponsiveContainer>
+
+            <ul className="mt-3 text-sm text-gray-600 space-y-1">
+              {topCoupons.map((r, i) => (
+                <li key={i} className="truncate">{r.name} — {r.count}</li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+
+        {/* Categories */}
+        <Card title="Categorías con más canjes">
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={categories}
+                  dataKey="count"
+                  nameKey="name"
+                  cx="50%" cy="50%" outerRadius={90}
+                  label={(e:any) => `${e.name}: ${e.count}`}
+                  labelLine={false}
+                >
+                  {categories.map((_, idx) => (
+                    <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+
+            <ul className="mt-3 text-sm text-gray-600 space-y-1">
+              {categories.map((r, i) => (
+                <li key={i} className="truncate">{r.name} — {r.count}</li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-25">
+
+      <Card title={`Demografía de usuarios`}>
+          {!demos ? (
+          <div className="text-gray-500 text-sm">Sin datos</div>
+        ) : (  
+            <div className="h-72">
+              <div className="text-sm font-medium mb-2">Género</div>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={demos.gender} dataKey="count" nameKey="label" cx="50%" cy="50%" outerRadius={80} label>
+                    {demos.gender.map((_, idx) => (
+                      <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+        )}  
+      </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-25">
+
+      <Card title={`Demografía de usuarios`}>
+          {!demos ? (
+          <div className="text-gray-500 text-sm">Sin datos</div>
+        ) : (  
+            <div className="h-55">
+              <div className="text-sm font-medium mb-2">Rango de edad</div>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={demos.age}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  
+                  <XAxis dataKey="label" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+        )}  
+      </Card>
+      </div>
+      
+    </div>
+  );
+}
